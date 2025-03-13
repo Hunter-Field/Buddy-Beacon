@@ -89,12 +89,6 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
-//  // INITALIZATION COMMANDS
-//  uint8_t init_cmds[] = {0x38, 0x08, 0x01, 0x06, 0x02, 0x0C};
-//  for (uint8_t i = 0; i < sizeof(init_cmds); i++) {
-//	  HAL_SPI_Transmit(&hspi1, &init_cmds[i], 1, 100);
-//	  HAL_Delay(100);
-//  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -248,8 +242,6 @@ void OLED_SendString(char *myString) {
 
 		// Print the first 16 characters of current chunk
 		for (uint16_t i = start; i < start + 16 && i < size; i++) {
-//			SPI1->DR = 0x06;
-//			HAL_Delay(10);
 			SPI1->DR = charList[i];
 			HAL_Delay(10);
 		}
@@ -260,8 +252,6 @@ void OLED_SendString(char *myString) {
 
 		// Print the next 16 characters of the current chunk
 		for (uint16_t i = start + 16; i < start + 32 && i < size; i++) {
-//			SPI1->DR = 0x06;
-//			HAL_Delay(10);
 			SPI1->DR = charList[i];
 			HAL_Delay(10);
 		}
