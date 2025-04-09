@@ -5,7 +5,7 @@
 #define MAX_LEN 240
 #include <stdio.h>
 #include <string.h>
-#include "beacon_packets.h"
+#include "packets.h"
 
 #define PACKET_MAX_SIZE sizeof(BeaconPacket)
 #define MAX_SERIALIZED_SIZE 240
@@ -45,12 +45,37 @@ size_t serializeBeaconPacket(const BeaconPacket *packet, uint8_t *buffer) {
             memcpy(buffer + offset, &packet->data.sendMessage.randNum, sizeof(uint16_t));
             offset += sizeof(uint16_t);
             break;
+        case 6:
+            memcpy(buffer + offset, &packet->data.ackMessage.randNum, sizeof(uint16_t));
+            offset += sizeof(uint16_t);
+            break;
+        case 7:
+            memcpy(buffer + offset, &packet->data.beaconList.totalNum, sizeof(uint8_t));
+            offset += sizeof(uint8_t);
+            memcpy(buffer + offset, &packet->data.beaconList.startingNum, sizeof(uint8_t));
+            offset += sizeof(uint8_t);
+            memcpy(buffer + offset, &packet->data.beaconList.endingNum, sizeof(uint8_t));
+            offset += sizeof(uint8_t);
+            uint8_t numBeingSent = packet->data.beaconList.endingNum - packet->data.beaconList.startingNum + 1;
+            for (int i = 0; i < numBeingSent; i++) {
+                memcpy(buffer + offset, packet->data.beaconList.beacons[i].beaconID, 12);
+                offset += 12;
+                memcpy(buffer + offset, packet->data.beaconList.beacons[i].beaconName, 16);
+                offset += 16;
+                memcpy(buffer + offset, &packet->data.beaconList.beacons[i].inRange, sizeof(bool));
+                offset += sizeof(bool);
+                memcpy(buffer + offset, packet->data.beaconList.beacons[i].accessThroughBeaconID, 12);
+                offset += 12;
+            }
+            break;
+        default:
+            return -1;
     }
     return offset;
 }
 
-void deserializeBeaconPacket(const uint8_t *buffer, size_t size, BeaconPacket *packet) {
-    if (!buffer || !packet || size < 5) return;  // Ensure minimum valid size
+void deserializeBeaconPacket(const uint8_t *buffer, BeaconPacket *packet) {
+    if (!buffer || !packet) return;
     size_t offset = 0;
     memcpy(&packet->packetType, buffer + offset, sizeof(packet->packetType));
     offset += sizeof(packet->packetType);
@@ -81,6 +106,31 @@ void deserializeBeaconPacket(const uint8_t *buffer, size_t size, BeaconPacket *p
             offset += packet->data.sendMessage.messageLength;
             memcpy(&packet->data.sendMessage.randNum, buffer + offset, sizeof(uint16_t));
             break;
+        case 6:
+            memcpy(&packet->data.ackMessage.randNum, buffer + offset, sizeof(uint16_t));
+            break;
+        case 7:
+            memcpy(&packet->data.beaconList.totalNum, buffer + offset, sizeof(uint8_t));
+            offset += sizeof(uint8_t);
+            memcpy(&packet->data.beaconList.startingNum, buffer + offset, sizeof(uint8_t));
+            offset += sizeof(uint8_t);
+            memcpy(&packet->data.beaconList.endingNum, buffer + offset, sizeof(uint8_t));
+            offset += sizeof(uint8_t);
+            uint8_t numBeingSent = packet->data.beaconList.endingNum - packet->data.beaconList.startingNum + 1;
+            for (int i = 0; i < numBeingSent; i++) {
+                memcpy(packet->data.beaconList.beacons[i].beaconID, buffer + offset, 12);
+                offset += 12;
+                memcpy(packet->data.beaconList.beacons[i].beaconName, buffer + offset, 16);
+                offset += 16;
+                memcpy(&packet->data.beaconList.beacons[i].inRange, buffer + offset, sizeof(bool));
+                offset += sizeof(bool);
+                memcpy(packet->data.beaconList.beacons[i].accessThroughBeaconID, buffer + offset, 12);
+                offset += 12;
+            }
+            break;
+        default:
+
+            return;
     }
 }
 
@@ -118,7 +168,7 @@ int main() {
     printSerializedData(buffer, serializedSize);
 
     BeaconPacket receivedPacket;
-    deserializeBeaconPacket(buffer, serializedSize, &receivedPacket);
+    deserializeBeaconPacket(buffer, &receivedPacket);
 
     printf("Deserialized Packet Type: %d\n", receivedPacket.packetType);
     printf("Deserialized TTL: %d\n", receivedPacket.ttl);
