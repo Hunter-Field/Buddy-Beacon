@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "packets.h"
-
-#define MAX_LEN 240
-#include <stdio.h>
 #include <string.h>
-#include "packets.h"
+#define MAX_LEN 240
 
 #define PACKET_MAX_SIZE sizeof(BeaconPacket)
 #define MAX_SERIALIZED_SIZE 240
