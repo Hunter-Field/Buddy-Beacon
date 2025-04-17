@@ -52,7 +52,9 @@ DMA_HandleTypeDef hdma_usart2_rx;
 /* USER CODE BEGIN PV */
 
 #define MAX_SERIALIZED_SIZE 240
+static uint8_t rxBuffer[MAX_SERIALIZED_SIZE];
 uint8_t packet_buffer[240];
+uint8_t startingIndexOfBufferForPacket = 0;
 static volatile bool  rxReady = false;
 static volatile uint16_t rxLen   = 0;
 /* USER CODE END PV */
@@ -198,10 +200,9 @@ size_t serializeBeaconPacket(const BeaconPacket *packet, uint8_t *buffer)
     return offset;
 }
 
-void deserializeBeaconPacket(const uint8_t *buffer, BeaconPacket *packet)
+void deserializeBeaconPacket(const uint8_t *buffer, uint16_t startIndex, BeaconPacket *packet)
 {
-    if (!buffer || !packet) return;
-    size_t offset = 0;
+    size_t offset = startIndex;
     memcpy(&packet->packetType, buffer + offset, sizeof(packet->packetType));
     offset += sizeof(packet->packetType);
     memcpy(&packet->ttl, buffer + offset, sizeof(packet->ttl));
@@ -357,6 +358,15 @@ int main(void)
 	memcpy(packet.data.sendMessage.message, msg, packet.data.sendMessage.messageLength);
 	packet.data.sendMessage.randNum = 0xABCD;
 	size_t txLen = serializeBeaconPacket(&packet, txBuffer);
+	uint8_t atBuf[ MAX_SERIALIZED_SIZE + 32 ];
+	size_t  atLen = 0;
+	atLen = snprintf((char*)atBuf, sizeof(atBuf),
+	                 "AT+SEND=110,%u,",
+	                 (unsigned)txLen);
+	memcpy(atBuf + atLen, txBuffer, txLen);
+	atLen += txLen;
+	atBuf[atLen++] = '\r';
+	atBuf[atLen++] = '\n';
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -367,6 +377,62 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+//	  if (rxReady) {
+//	      rxReady = false;
+//
+//	      // 1) Find the "+RCV=" marker in the fresh DMA buffer:
+//	      char *base = (char*)packet_buffer + startingIndexOfBufferForPacket;
+//	      char *rcv  = strstr(base, "+RCV=");
+//	      if (!rcv) {
+//	          // malformed or no new packet
+//	          continue;
+//	      }
+//
+//	      // 2) Advance past "+RCV="
+//	      char *p = rcv + strlen("+RCV=");
+//
+//	      // 3) Skip <Address> up to the next comma
+//	      while (*p && *p != ',') p++;
+//	      if (*p == ',') p++;
+//
+//	      // 4) Skip <Length> up to the next comma
+//	      while (*p && *p != ',') p++;
+//	      if (*p == ',') p++;
+//
+//	      // 5) Now 'p' points to the start of <Data>
+//	      uint16_t packetStart = (uint16_t)(p - (char*)packet_buffer);
+//
+//	      // 6) Deserialize from there:
+//	      BeaconPacket pkt;
+//	      memset(&pkt, 0, sizeof(pkt));
+//	      deserializeBeaconPacket(packet_buffer, packetStart, &pkt);
+//
+//	      // 7) Print to OLED just like before:
+//	      OLED_SendString("Received Packet:");
+//	      HAL_Delay(300);
+//
+//	      char line[32];
+//	      sprintf(line, "Type: %d", pkt.packetType);
+//	      OLED_SendString(line);
+//	      HAL_Delay(300);
+//
+//	      sprintf(line, "TTL: %d", pkt.ttl);
+//	      OLED_SendString(line);
+//	      HAL_Delay(300);
+//
+//	      if (pkt.packetType == 5) {
+//	          sprintf(line, "Len: %d", pkt.data.sendMessage.messageLength);
+//	          OLED_SendString(line);
+//	          HAL_Delay(300);
+//
+//	          // null‑terminate just in case and display
+//	          pkt.data.sendMessage.message[pkt.data.sendMessage.messageLength] = '\0';
+//	          OLED_SendString((char*)pkt.data.sendMessage.message);
+//	          HAL_Delay(500);
+//	      }
+//
+//	        }
+
 	OLED_SendString("Sending Packet:");
 	HAL_Delay(500);
 	char line[32];
@@ -378,8 +444,8 @@ int main(void)
 	HAL_Delay(500);
 	sprintf(line, "Msg Len: %d", packet.data.sendMessage.messageLength);
 	OLED_SendString(line);
-	HAL_UART_Transmit_DMA(&huart2, txBuffer, txLen);
-      HAL_Delay(1000);
+	HAL_UART_Transmit(&huart2, atBuf, atLen,100);
+  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
