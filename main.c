@@ -6,6 +6,7 @@
 
 #define PACKET_MAX_SIZE sizeof(BeaconPacket)
 #define MAX_SERIALIZED_SIZE 240
+#define MAX_MESSAGE_LEN 200
 size_t serializeBeaconPacket(const BeaconPacket *packet, uint8_t *buffer) {
     if (!packet || !buffer) return 0;
     size_t offset = 0;

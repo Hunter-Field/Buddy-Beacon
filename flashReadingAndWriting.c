@@ -9,10 +9,10 @@ uint32_t startBeaconArrayFlashAddress = 0x080E0000;
 void storeBeaconsInFlash(){
     HAL_FLASH_Unlock();
     FLASH_Erase_Sector(FLASH_SECTOR_11, VOLTAGE_RANGE_3);
-    HAL_FLASH_Lock();
     for (int i = 0; i < MAX_BEACONS; i++) {
         HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, startBeaconArrayFlashAddress + (i * sizeof(BeaconInfo)), (uint32_t)&beaconsArray[i]);
     }
+    HAL_FLASH_Lock();
 }
 void initializeBeaconArray(){
     for (int i = 0; i < MAX_BEACONS; i++) {
