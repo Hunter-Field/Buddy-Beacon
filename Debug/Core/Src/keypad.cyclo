@@ -1,0 +1,4 @@
+../Core/Src/keypad.c:25:6:Keypad_Scan	5
+../Core/Src/keypad.c:50:6:Keypad_Update	36
+../Core/Src/keypad.c:290:6:Keypad_Refresh_Screen	1
+../Core/Src/keypad.c:299:6:Keypad_Clear_Buffer	1

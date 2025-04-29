@@ -1,0 +1,18 @@
+# Ignore build output
+/build
+*.o
+*.d
+*.elf
+*.bin
+*.hex
+
+# Ignore IDE files
+*.launch
+*.swp
+*.swo
+*.log
+.settings/
+.vscode/
+
+# Temporary files
+*.backup

@@ -1,0 +1,5 @@
+../Core/Src/LVGL_drivers.c:47:6:lv_port_disp_init	8	static
+../Core/Src/LVGL_drivers.c:132:13:disp_init	8	static
+../Core/Src/LVGL_drivers.c:141:6:disp_enable_update	4	static
+../Core/Src/LVGL_drivers.c:148:6:disp_disable_update	4	static
+../Core/Src/LVGL_drivers.c:156:13:disp_flush	32	static
